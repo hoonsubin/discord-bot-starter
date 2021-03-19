@@ -1,16 +1,20 @@
 import Discord, { Message } from 'discord.js';
 
 const TOKEN = process.env.DISCORD_TOKEN;
-const CALLBACK_SERVER_ID = process.env.CALLBACK_SERVER_ID;
+const WEBHOOK_CRED = { id: process.env.WEBHOOK_ID, token: process.env.WEBHOOK_TOKEN };
 
 /**
  * the main entry function for running the discord application
  */
 export default async function main() {
-    if (!TOKEN || !CALLBACK_SERVER_ID) throw new Error('Please provide discord bot credentials');
-    // Create a discord channel webhook client
-    //const webhookClient = new Discord.WebhookClient(process.env.WEBHOOK_ID, process.env.WEBHOOK_TOKEN);
+    // if (!TOKEN) throw new Error('Please provide discord bot credentials');
+    // await discordBot(TOKEN);
 
+    if (!WEBHOOK_CRED.id || !WEBHOOK_CRED.token) throw new Error('Please provide discord channel webhook credentials');
+    await webhookIntegration(WEBHOOK_CRED.id, WEBHOOK_CRED.token);
+}
+
+async function discordBot(token: string) {
     // Create an instance of a Discord client app
     const client = new Discord.Client({ fetchAllMembers: true, disableMentions: 'all' });
 
@@ -34,5 +38,14 @@ export default async function main() {
     });
 
     // Log our bot in using the token from https://discord.com/developers/applications
-    await client.login(TOKEN);
+    await client.login(token);
+}
+
+async function webhookIntegration(channelId: string, webhookToken: string) {
+    // Create a discord channel webhook client
+    const webhookClient = new Discord.WebhookClient(channelId, webhookToken);
+
+    console.log('Discord webhook client is ready!');
+
+    webhookClient.send('Discord webhook client is ready!');
 }
