@@ -29,10 +29,10 @@ async function discordBot(token: string) {
     });
 
     client.on('message', async (message: Message) => {
-        const conextChannel = message.channel;
+        const contextChannel = message.channel;
 
         if (message.content.startsWith('ping')) {
-            conextChannel.send('pong');
+            contextChannel.send('pong');
             //message.author.send('pong');
         }
     });
