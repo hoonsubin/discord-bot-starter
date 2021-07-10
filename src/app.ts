@@ -1,51 +1,81 @@
-import Discord, { Message } from 'discord.js';
-
-const TOKEN = process.env.DISCORD_TOKEN;
-const WEBHOOK_CRED = { id: process.env.WEBHOOK_ID, token: process.env.WEBHOOK_TOKEN };
+import type { Message } from 'discord.js';
+import { DISCORD_APP_TOKEN } from './config';
+import { initDiscordApp } from './clients';
+import express from 'express';
+import fetch from 'node-fetch';
+import { URLSearchParams } from 'url';
 
 /**
  * the main entry function for running the discord application
  */
-export default async function main() {
-    // if (!TOKEN) throw new Error('Please provide discord bot credentials');
-    // await discordBot(TOKEN);
-
-    if (!WEBHOOK_CRED.id || !WEBHOOK_CRED.token) throw new Error('Please provide discord channel webhook credentials');
-    await webhookIntegration(WEBHOOK_CRED.id, WEBHOOK_CRED.token);
+export default async function app() {
+    await discordAppController();
+    await expressAppController();
 }
 
-async function discordBot(token: string) {
-    // Create an instance of a Discord client app
-    const client = new Discord.Client({ fetchAllMembers: true, disableMentions: 'all' });
+const expressAppController = async () => {
+    const app = express();
 
-    /**
-     * The ready event is vital, it means that only _after_ this will your bot start reacting to information
-     * received from Discord
-     */
-    client.on('ready', async () => {
-        const applicationInfo = await client.fetchApplication();
+    const port = process.env.PORT || 8080;
 
-        console.log(`${applicationInfo.name} has started`);
+    const DISCORD_OAUTH_URL = 'https://discord.com/api/oauth2/authorize';
+
+    app.get('/install', (_req, res) => {
+        return res.send('<h1>Hello World</h1>');
     });
 
-    client.on('message', async (message: Message) => {
-        const contextChannel = message.channel;
+    app.get('/oauth2', async ({ query }, res) => {
+        const { code } = query;
 
-        if (message.content.startsWith('ping')) {
-            contextChannel.send('pong');
-            //message.author.send('pong');
+        if (typeof code === 'string') {
+            try {
+                const oauthRes = await fetch('https://discord.com/api/oauth2/token', {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        client_id: 'clientID',
+                        client_secret: 'clientSecret',
+                        code,
+                        grant_type: 'authorization_code',
+                        redirect_uri: `http://localhost:${port}`,
+                        scope: 'identify',
+                    }),
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                });
+
+                const oauthData = await oauthRes.json();
+                console.log(oauthData);
+                return res.status(200).send('<h1>App has been successfully installed!</h1>');
+            } catch (err) {
+                console.error(err);
+                return res.status(401).send('<h1>Something went wrong during the authorization process</h1>');
+            }
         }
     });
 
-    // Log our bot in using the token from https://discord.com/developers/applications
-    await client.login(token);
-}
+    app.listen(port, () => console.log(`App listening at port ${port}`));
+};
 
-async function webhookIntegration(channelId: string, webhookToken: string) {
-    // Create a discord channel webhook client
-    const webhookClient = new Discord.WebhookClient(channelId, webhookToken);
+const discordAppController = async () => {
+    const clientApp = initDiscordApp();
 
-    console.log('Discord webhook client is ready!');
+    clientApp.on('ready', async () => {
+        const applicationInfo = await clientApp.fetchApplication();
 
-    webhookClient.send('Discord webhook client is ready!');
-}
+        console.log(`${applicationInfo.name} is ready!`);
+    });
+
+    clientApp.on('message', pingPongMsgHandler);
+
+    await clientApp.login(DISCORD_APP_TOKEN);
+};
+
+const pingPongMsgHandler = async (message: Message) => {
+    const contextChannel = message.channel;
+    console.log(JSON.stringify(message));
+
+    if (message.content.startsWith('ping')) {
+        await contextChannel.send('pong');
+    }
+};
