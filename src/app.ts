@@ -1,4 +1,3 @@
-import type { Message } from 'discord.js';
 import { DISCORD_APP_TOKEN } from './config';
 import { initDiscordApp } from './clients';
 import express from 'express';
@@ -15,12 +14,14 @@ export default async function app() {
 
 /**
  * Handles client request via Express.js. These are usually for custom endpoints or OAuth and app installation.
+ * We didn't hook this up to any database, so for out-of-the-box usage, you can hard-code the guild ID and other credentials in a .env file
  */
 const expressAppController = async () => {
     const app = express();
 
     const port = process.env.PORT || 8080;
 
+    // used to add the bot to a server (https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links)
     const DISCORD_OAUTH_URL = 'https://discord.com/api/oauth2/authorize';
 
     // add application install link

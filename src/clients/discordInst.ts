@@ -2,7 +2,7 @@ import Discord from 'discord.js';
 import { Client, Intents } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
-import { DISCORD_APP_TOKEN, DISCORD_APP_CLIENT_ID } from '../config';
+import { DISCORD_APP_TOKEN, DISCORD_APP_CLIENT_ID, DISCORD_GUILD_ID } from '../config';
 
 export const slashCommands = [
     {
@@ -12,7 +12,7 @@ export const slashCommands = [
 ];
 
 export const initDiscordApp = async () => {
-    if (!DISCORD_APP_TOKEN || !DISCORD_APP_CLIENT_ID) {
+    if (!DISCORD_APP_TOKEN || !DISCORD_APP_CLIENT_ID || !DISCORD_GUILD_ID) {
         throw new Error(
             'No Discord bot token was provided, please set the environment variable DISCORD_APP_TOKEN and DISCORD_APP_CLIENT_ID',
         );
@@ -22,7 +22,9 @@ export const initDiscordApp = async () => {
     try {
         console.log('Started refreshing application (/) commands.');
 
-        await rest.put(Routes.applicationGuildCommands(DISCORD_APP_CLIENT_ID, 'GUILD_ID'), { body: slashCommands });
+        await rest.put(Routes.applicationGuildCommands(DISCORD_APP_CLIENT_ID, DISCORD_GUILD_ID), {
+            body: slashCommands,
+        });
 
         console.log('Successfully reloaded application (/) commands.');
     } catch (error) {
