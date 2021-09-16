@@ -1,8 +1,4 @@
-import type { ClientOptions } from 'discord.js';
-
 export type ClientMode = 'webhook' | 'bot';
-
-export const discordClientConfig: ClientOptions = { fetchAllMembers: true, disableMentions: 'all' };
 
 export const DISCORD_APP_TOKEN = process.env.DISCORD_APP_TOKEN;
 

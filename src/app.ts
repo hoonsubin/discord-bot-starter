@@ -13,6 +13,9 @@ export default async function app() {
     await expressAppController();
 }
 
+/**
+ * Handles client request via Express.js. These are usually for custom endpoints or OAuth and app installation.
+ */
 const expressAppController = async () => {
     const app = express();
 
@@ -20,6 +23,7 @@ const expressAppController = async () => {
 
     const DISCORD_OAUTH_URL = 'https://discord.com/api/oauth2/authorize';
 
+    // add application install link
     app.get('/install', (_req, res) => {
         return res.send('<h1>Hello World</h1>');
     });
@@ -36,7 +40,7 @@ const expressAppController = async () => {
                         client_secret: 'clientSecret',
                         code,
                         grant_type: 'authorization_code',
-                        redirect_uri: `http://localhost:${port}`,
+                        redirect_uri: `http://localhost:${port}`, // redirects to localhost for testing
                         scope: 'identify',
                     }),
                     headers: {
@@ -57,25 +61,28 @@ const expressAppController = async () => {
     app.listen(port, () => console.log(`App listening at port ${port}`));
 };
 
+/**
+ * The main controller for Discord API requests. Everything that is done from Discord should be written here
+ */
 const discordAppController = async () => {
-    const clientApp = initDiscordApp();
+    const clientApp = await initDiscordApp();
 
     clientApp.on('ready', async () => {
-        const applicationInfo = await clientApp.fetchApplication();
-
-        console.log(`${applicationInfo.name} is ready!`);
+        if (clientApp.user) {
+            console.log(`${clientApp.user.tag} is ready!`);
+        } else {
+            console.log(`Failed to login as a user!`);
+        }
     });
 
-    clientApp.on('message', pingPongMsgHandler);
+    // a ping-pong test
+    clientApp.on('interactionCreate', async (interaction) => {
+        if (!interaction.isCommand()) return;
+
+        if (interaction.commandName === 'ping') {
+            await interaction.reply('Pong!');
+        }
+    });
 
     await clientApp.login(DISCORD_APP_TOKEN);
-};
-
-const pingPongMsgHandler = async (message: Message) => {
-    const contextChannel = message.channel;
-    console.log(JSON.stringify(message));
-
-    if (message.content.startsWith('ping')) {
-        await contextChannel.send('pong');
-    }
 };
