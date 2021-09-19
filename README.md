@@ -12,11 +12,12 @@ This starter is focused on developing a full distributable Discord server bot or
 Before starting the server, you need to first create a `.env` file with the following variables.
 
 ```env
-# used for server bots
-DISCORD_TOKEN=<discord bot token>
-# used for webhook app
-WEBHOOK_ID=<discord channel webhook client id>
-WEBHOOK_TOKEN=<discord channel webhook client token>
+# Bot user app token
+DISCORD_APP_TOKEN=<bot token>
+# Bot user client ID
+DISCORD_APP_CLIENT_ID=<bot client>
+# Server ID for the bot to be installed
+DISCORD_GUILD_ID=<guild id>
 ```
 
 Next, ensure that you have a usable Discord app on your developer portal.
@@ -36,7 +37,7 @@ Discord bot token is used to login to Discord as a bot user.
 ![bot-token](img/bot-token.png)
 
 Click on the 'Copy' button under the 'Tokens' section to get your bot token.
-Then paste it as the value for `DISCORD_TOKEN` in your `.env` file.
+Then paste it as the value for `DISCORD_APP_TOKEN` in your `.env` file.
 
 For adding a channel webhook integration, you need to first create a webhook under the 'Channel Edit' -> 'Integration' settings.
 
