@@ -24,12 +24,21 @@ export const initDiscordApp = async () => {
         );
     }
 
-    const rest = new REST({ version: '9' }).setToken(DISCORD_APP_TOKEN);
+    await refreshSlashCommands(DISCORD_APP_TOKEN, DISCORD_APP_CLIENT_ID, DISCORD_GUILD_ID);
+
+    const clientApp = new Client({ intents: [Intents.FLAGS.GUILDS] });
+
+    return clientApp;
+};
+
+export const refreshSlashCommands = async (appToken: string, appClientId: string, guildId: string) => {
+    // generally, you only need to run this function when the slash command changes
+    const rest = new REST({ version: '9' }).setToken(appToken);
     try {
         console.log('Started refreshing application (/) commands.');
 
         // note: the `DISCORD_GUILD_ID` is hard-coded in this project, but this can be changed to read it from a remote database
-        await rest.put(Routes.applicationGuildCommands(DISCORD_APP_CLIENT_ID, DISCORD_GUILD_ID), {
+        await rest.put(Routes.applicationGuildCommands(appClientId, guildId), {
             body: appConfig.slashCommands,
         });
 
@@ -37,8 +46,4 @@ export const initDiscordApp = async () => {
     } catch (error) {
         console.error(error);
     }
-
-    const clientApp = new Client({ intents: [Intents.FLAGS.GUILDS] });
-
-    return clientApp;
 };

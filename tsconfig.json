@@ -2,10 +2,8 @@
     "compilerOptions": {
         "module": "commonjs",
         "esModuleInterop": true,
-        "target": "es2015",
-        "lib": [
-            "es6"
-        ],
+        "target": "esnext",
+        "lib": ["esnext", "DOM", "DOM.Iterable"],
         "moduleResolution": "node",
         "sourceMap": true,
         "outDir": "build",
@@ -18,17 +16,6 @@
         "strictPropertyInitialization": false,
         "removeComments": true
     },
-    "lib": [
-        "es2015"
-    ],
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "node_modules",
-        "build",
-        "dist",
-        "scripts",
-        "tests"
-    ]
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "build", "dist", "scripts", "tests"]
 }
