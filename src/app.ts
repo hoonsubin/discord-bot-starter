@@ -1,51 +1,66 @@
-import Discord, { Message } from 'discord.js';
-
-const TOKEN = process.env.DISCORD_TOKEN;
-const WEBHOOK_CRED = { id: process.env.WEBHOOK_ID, token: process.env.WEBHOOK_TOKEN };
+import { DISCORD_APP_TOKEN } from './config';
+import { initDiscordApp, appOauthInstallUrl } from './clients';
+import express from 'express';
 
 /**
  * the main entry function for running the discord application
  */
-export default async function main() {
-    // if (!TOKEN) throw new Error('Please provide discord bot credentials');
-    // await discordBot(TOKEN);
-
-    if (!WEBHOOK_CRED.id || !WEBHOOK_CRED.token) throw new Error('Please provide discord channel webhook credentials');
-    await webhookIntegration(WEBHOOK_CRED.id, WEBHOOK_CRED.token);
+export default async function app() {
+    await discordAppController();
+    await expressAppController();
 }
 
-async function discordBot(token: string) {
-    // Create an instance of a Discord client app
-    const client = new Discord.Client({ fetchAllMembers: true, disableMentions: 'all' });
+/**
+ * Handles client request via Express.js. These are usually for custom endpoints or OAuth and app installation.
+ * We didn't hook this up to any database, so for out-of-the-box usage, you can hard-code the guild ID and other credentials in a .env file
+ */
+const expressAppController = async () => {
+    const app = express();
 
-    /**
-     * The ready event is vital, it means that only _after_ this will your bot start reacting to information
-     * received from Discord
-     */
-    client.on('ready', async () => {
-        const applicationInfo = await client.fetchApplication();
+    const port = process.env.PORT || 8080;
 
-        console.log(`${applicationInfo.name} has started`);
+    const installUrl = appOauthInstallUrl();
+
+    // show application install link
+    app.get('/install', (_req, res) => {
+        // redirect to app install page
+        return res.redirect(installUrl);
+
+        // send the install link as a JSON response
+        //return res.status(200).json({ url: installUrl });
     });
 
-    client.on('message', async (message: Message) => {
-        const conextChannel = message.channel;
+    // add endpoint for OAuth installation with redirect URLs (https://discord.com/developers/docs/topics/oauth2#authorization-code-grant)
+    app.get('/oauth2', async ({ query }, res) => {
+        const { code } = query;
+        console.log(code);
+    });
 
-        if (message.content.startsWith('ping')) {
-            conextChannel.send('pong');
-            //message.author.send('pong');
+    app.listen(port, () => console.log(`App listening at port ${port}`));
+};
+
+/**
+ * The main controller for Discord API requests. Everything that is done from Discord should be written here
+ */
+const discordAppController = async () => {
+    const clientApp = await initDiscordApp();
+
+    clientApp.on('ready', async () => {
+        if (clientApp.user) {
+            console.log(`${clientApp.user.tag} is ready!`);
+        } else {
+            console.log(`Failed to login as a user!`);
         }
     });
 
-    // Log our bot in using the token from https://discord.com/developers/applications
-    await client.login(token);
-}
+    // a ping-pong test
+    clientApp.on('interactionCreate', async (interaction) => {
+        if (!interaction.isCommand()) return;
 
-async function webhookIntegration(channelId: string, webhookToken: string) {
-    // Create a discord channel webhook client
-    const webhookClient = new Discord.WebhookClient(channelId, webhookToken);
+        if (interaction.commandName === 'ping') {
+            await interaction.reply('Pong!');
+        }
+    });
 
-    console.log('Discord webhook client is ready!');
-
-    webhookClient.send('Discord webhook client is ready!');
-}
+    await clientApp.login(DISCORD_APP_TOKEN);
+};
