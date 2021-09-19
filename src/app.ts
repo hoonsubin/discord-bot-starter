@@ -1,8 +1,6 @@
 import { DISCORD_APP_TOKEN } from './config';
-import { initDiscordApp } from './clients';
+import { initDiscordApp, appOauthInstallUrl } from './clients';
 import express from 'express';
-import fetch from 'node-fetch';
-import { URLSearchParams } from 'url';
 
 /**
  * the main entry function for running the discord application
@@ -21,42 +19,21 @@ const expressAppController = async () => {
 
     const port = process.env.PORT || 8080;
 
-    // used to add the bot to a server (https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links)
-    const DISCORD_OAUTH_URL = 'https://discord.com/api/oauth2/authorize';
+    const installUrl = appOauthInstallUrl();
 
-    // add application install link
+    // show application install link
     app.get('/install', (_req, res) => {
-        return res.send('<h1>Hello World</h1>');
+        // redirect to app install page
+        return res.redirect(installUrl);
+
+        // send the install link as a JSON response
+        //return res.status(200).json({ url: installUrl });
     });
 
+    // add endpoint for OAuth installation with redirect URLs (https://discord.com/developers/docs/topics/oauth2#authorization-code-grant)
     app.get('/oauth2', async ({ query }, res) => {
         const { code } = query;
-
-        if (typeof code === 'string') {
-            try {
-                const oauthRes = await fetch('https://discord.com/api/oauth2/token', {
-                    method: 'POST',
-                    body: new URLSearchParams({
-                        client_id: 'clientID',
-                        client_secret: 'clientSecret',
-                        code,
-                        grant_type: 'authorization_code',
-                        redirect_uri: `http://localhost:${port}`, // redirects to localhost for testing
-                        scope: 'identify',
-                    }),
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                });
-
-                const oauthData = await oauthRes.json();
-                console.log(oauthData);
-                return res.status(200).send('<h1>App has been successfully installed!</h1>');
-            } catch (err) {
-                console.error(err);
-                return res.status(401).send('<h1>Something went wrong during the authorization process</h1>');
-            }
-        }
+        console.log(code);
     });
 
     app.listen(port, () => console.log(`App listening at port ${port}`));

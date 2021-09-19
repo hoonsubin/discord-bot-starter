@@ -1,0 +1,10 @@
+{
+    "scope": ["bot", "applications.commands"],
+    "permissions": 2147551232,
+    "slashCommands": [
+        {
+            "name": "ping",
+            "description": "Replies with Pong!"
+        }
+    ]
+}

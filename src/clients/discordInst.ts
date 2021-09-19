@@ -1,15 +1,21 @@
-import Discord from 'discord.js';
 import { Client, Intents } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
-import { DISCORD_APP_TOKEN, DISCORD_APP_CLIENT_ID, DISCORD_GUILD_ID } from '../config';
+import { DISCORD_APP_TOKEN, DISCORD_APP_CLIENT_ID, DISCORD_GUILD_ID, appConfig } from '../config';
 
-export const slashCommands = [
-    {
-        name: 'ping',
-        description: 'Replies with Pong!',
-    },
-];
+const concatBotScope = (scopes: string[]) => {
+    // bot permissions are separated by a percent-encoded white space
+    return scopes.join('%20');
+};
+
+export const appOauthInstallUrl = () => {
+    if (!DISCORD_APP_CLIENT_ID) throw new Error('No client ID provided');
+
+    // used to add the bot to a server (https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links)
+    return `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_APP_CLIENT_ID}&permissions=${
+        appConfig.permissions
+    }&scope=${concatBotScope(appConfig.scope)}`;
+};
 
 export const initDiscordApp = async () => {
     if (!DISCORD_APP_TOKEN || !DISCORD_APP_CLIENT_ID || !DISCORD_GUILD_ID) {
@@ -22,8 +28,9 @@ export const initDiscordApp = async () => {
     try {
         console.log('Started refreshing application (/) commands.');
 
+        // note: the `DISCORD_GUILD_ID` is hard-coded in this project, but this can be changed to read it from a remote database
         await rest.put(Routes.applicationGuildCommands(DISCORD_APP_CLIENT_ID, DISCORD_GUILD_ID), {
-            body: slashCommands,
+            body: appConfig.slashCommands,
         });
 
         console.log('Successfully reloaded application (/) commands.');
