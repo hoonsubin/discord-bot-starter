@@ -1,15 +1,25 @@
 # Discord Bot Starter Project
 
-## About
+## Introduction
 
-This is a Discord bot starter project made with [Discord.js](https://discord.js.org/#/docs/main/stable/general/welcome).
-This starter is focused on developing a full distributable Discord server bot or a light-weight webhook integration bot.
+This is a Discord bot starter project made with [Discord.js](https://discord.js.org/) and TypeScript.
+This template project comes with a simple ping-pong slash command for a predefined guild (server).
 
 ## Usage
 
-### Setting Up
+### Creating a Discord Application
 
-Before starting the server, you need to first create a `.env` file with the following variables.
+To create an application that can be registered to a Discord server, you must create a Discord app via the [Discord Developer Portal](https://discord.com/developers/applications).
+Once you created an app, you can access the client ID from the `General Information` setting and the bot token from the `Bot` setting (see image below).
+
+![client-id](https://user-images.githubusercontent.com/40356749/134047191-8ea55a38-f398-4021-b8dc-9f5aedbf7463.png)
+
+![bot-token](https://user-images.githubusercontent.com/40356749/134047251-93424ac3-bb8a-42a7-9dad-5a3855395abe.png)
+
+### Configuration
+
+To start the bot server, you must provide the application credentials environmental variables.
+You can do this by creating a `.env` file with the following variables.
 
 ```env
 # Bot user app token
@@ -20,37 +30,11 @@ DISCORD_APP_CLIENT_ID=<bot client>
 DISCORD_GUILD_ID=<guild id>
 ```
 
-Next, ensure that you have a usable Discord app on your developer portal.
-If you do not have a Discord app, you can create one from here: <https://discord.com/developers/applications>.
+The `DISCORD_GUILD_ID` refers to the Discord server ID (or guild ID) that the bot will listen to.
+You can configure the OAuth2 redirect URL to read and store the guild ID from a remote database when the user add the application to their server for public distribution.
 
-For creating channel-specific webhook integrations, you only need the channel editing permissions to add integrations.
-
-Unlike a full Discord app, webhooks are light and simple, but limited in it's features.
-Discord webhooks do not require any bot credentials, but they are only limited to a specific channel and do not have access to advanced RPCs.
-If you want to create a simple message subscription feature to a certain channel without any reactivity (e.g., a bot for sending Slack messages to Discord), webhooks will do the job.
-If you need advanced features like reading server (guild) information and user permissions or react to certain events, you will need to set up a full Discord bot.
-
-### Obtaining Credentials
-
-Discord bot token is used to login to Discord as a bot user.
-
-![bot-token](img/bot-token.png)
-
-Click on the 'Copy' button under the 'Tokens' section to get your bot token.
-Then paste it as the value for `DISCORD_APP_TOKEN` in your `.env` file.
-
-For adding a channel webhook integration, you need to first create a webhook under the 'Channel Edit' -> 'Integration' settings.
-
-![webhook-integration](img/channel-integration.png)
-
-Click on the 'Copy Webhook URL' button to request the webhook URL.
-The webhook URL has the following format `https://discord.com/api/webhooks/<webhook-id>/<webhook-token>`.
-
-For example:
-
-```url
-https://discord.com/api/webhooks/12345678910/fewgg-PFEfew_efgg2-fgWEGWG33g-fewgewg-sadfewgw
-```
+`src/config/appConfig.json` contains the bot permission, scope, and slash commands.
+The values must reflect the ones in the Discord Developer Portal app settings.
 
 ### Scripts
 
@@ -58,20 +42,29 @@ https://discord.com/api/webhooks/12345678910/fewgg-PFEfew_efgg2-fgWEGWG33g-fewge
 # install all the dependencies
 yarn
 
-# starts a local server that runs from a transpiled source to emulate production
+# starts the server app in node.js environment
 yarn start
-yarn serve
+# or you can use `yarn serve`
 
-# starts a development server that runs in ts-node
+# starts a development server with ts-node
 yarn dev
 
-# transpile the project into production-optimized javascript
+# transpile the project for production
 yarn build
 ```
+
+### Quick Start
+
+After running `yarn dev`, open <http://localhost:8080/install> to install the application to your Discord server.
+
+Go to a Discord channel that the bot has access to and type `/ping`.
+
+![ping-command](https://user-images.githubusercontent.com/40356749/134050635-43de75ca-24ae-442c-8e9d-9aa75137e09f.png)
 
 ## Further Readings
 
 For more information, please refer to the official Discord developer portal or the Discord.js documentation.
 
 - <https://discord.com/developers/docs/intro>
-- <https://discord.js.org/#/docs/main/master/general/welcome>
+- <https://discord.js.org/#/docs/main/stable/general/welcome>
+- <https://discordjs.guide/#before-you-begin>
