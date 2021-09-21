@@ -3,6 +3,11 @@ import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { DISCORD_APP_TOKEN, DISCORD_APP_CLIENT_ID, DISCORD_GUILD_ID, appConfig } from '../config';
 
+export interface DiscordCredentials {
+    token: string;
+    clientId: string;
+}
+
 const concatBotScope = (scopes: string[]) => {
     // bot permissions are separated by a percent-encoded white space
     return scopes.join('%20');
@@ -37,14 +42,15 @@ const refreshSlashCommands = async (appToken: string, appClientId: string, guild
 /**
  * The main controller for Discord API requests. Everything that is done from Discord should be written here
  */
-export const discordAppController = async () => {
-    if (!DISCORD_APP_TOKEN || !DISCORD_APP_CLIENT_ID || !DISCORD_GUILD_ID) {
+export const discordApp = async (appCred: DiscordCredentials) => {
+    // todo: refactor this to handle multiple guilds
+    if (!DISCORD_GUILD_ID) {
         throw new Error(
             'No Discord bot token was provided, please set the environment variable DISCORD_APP_TOKEN and DISCORD_APP_CLIENT_ID',
         );
     }
 
-    await refreshSlashCommands(DISCORD_APP_TOKEN, DISCORD_APP_CLIENT_ID, DISCORD_GUILD_ID);
+    await refreshSlashCommands(appCred.token, appCred.clientId, DISCORD_GUILD_ID);
 
     const clientApp = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
@@ -60,10 +66,18 @@ export const discordAppController = async () => {
     clientApp.on('interactionCreate', async (interaction) => {
         if (!interaction.isCommand()) return;
 
-        if (interaction.commandName === 'ping') {
+        const { commandName } = interaction;
+
+        if (commandName === 'ping') {
             await interaction.reply('Pong!');
+        } else if (commandName === 'greet') {
+            await interaction.reply('Hello ' + interaction.user.tag);
+        } else if (commandName === 'blep') {
+            await interaction.reply(`You chose ${JSON.stringify(interaction.options.data)}`);
         }
     });
 
     await clientApp.login(DISCORD_APP_TOKEN);
+
+    return clientApp;
 };
