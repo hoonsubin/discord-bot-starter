@@ -1,1 +1,2 @@
-export * from './discordInst';
+export * from './discord';
+export * from './express';
