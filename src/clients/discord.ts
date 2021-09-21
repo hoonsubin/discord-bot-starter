@@ -17,21 +17,7 @@ export const appOauthInstallUrl = () => {
     }&scope=${concatBotScope(appConfig.scope)}`;
 };
 
-export const initDiscordApp = async () => {
-    if (!DISCORD_APP_TOKEN || !DISCORD_APP_CLIENT_ID || !DISCORD_GUILD_ID) {
-        throw new Error(
-            'No Discord bot token was provided, please set the environment variable DISCORD_APP_TOKEN and DISCORD_APP_CLIENT_ID',
-        );
-    }
-
-    await refreshSlashCommands(DISCORD_APP_TOKEN, DISCORD_APP_CLIENT_ID, DISCORD_GUILD_ID);
-
-    const clientApp = new Client({ intents: [Intents.FLAGS.GUILDS] });
-
-    return clientApp;
-};
-
-export const refreshSlashCommands = async (appToken: string, appClientId: string, guildId: string) => {
+const refreshSlashCommands = async (appToken: string, appClientId: string, guildId: string) => {
     // generally, you only need to run this function when the slash command changes
     const rest = new REST({ version: '9' }).setToken(appToken);
     try {
@@ -46,4 +32,38 @@ export const refreshSlashCommands = async (appToken: string, appClientId: string
     } catch (error) {
         console.error(error);
     }
+};
+
+/**
+ * The main controller for Discord API requests. Everything that is done from Discord should be written here
+ */
+export const discordAppController = async () => {
+    if (!DISCORD_APP_TOKEN || !DISCORD_APP_CLIENT_ID || !DISCORD_GUILD_ID) {
+        throw new Error(
+            'No Discord bot token was provided, please set the environment variable DISCORD_APP_TOKEN and DISCORD_APP_CLIENT_ID',
+        );
+    }
+
+    await refreshSlashCommands(DISCORD_APP_TOKEN, DISCORD_APP_CLIENT_ID, DISCORD_GUILD_ID);
+
+    const clientApp = new Client({ intents: [Intents.FLAGS.GUILDS] });
+
+    clientApp.on('ready', async () => {
+        if (clientApp.user) {
+            console.log(`${clientApp.user.tag} is ready!`);
+        } else {
+            console.log(`Failed to login as a user!`);
+        }
+    });
+
+    // a ping-pong test
+    clientApp.on('interactionCreate', async (interaction) => {
+        if (!interaction.isCommand()) return;
+
+        if (interaction.commandName === 'ping') {
+            await interaction.reply('Pong!');
+        }
+    });
+
+    await clientApp.login(DISCORD_APP_TOKEN);
 };
